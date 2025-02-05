@@ -1,1 +1,1 @@
-# price_tracker
+# scraper_costco
