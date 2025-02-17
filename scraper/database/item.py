@@ -12,7 +12,7 @@ class Item(Base):
     store_id = Column(Integer, ForeignKey('stores.primary_id'), nullable=False)
     store = relationship('Store', back_populates='items')
 
-    price_snapshots = relationship('PriceSnapshot', back_populates='items')
+    price_snapshots = relationship('PriceSnapshot', back_populates='item')
 
     def __str__(self):
         return f"Store: {self.store_name} found at {self.website}"
