@@ -1,39 +1,24 @@
-# config/database.py
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from contextlib import contextmanager
+import os
+from dotenv import load_dotenv
 
-class DatabaseConfig:
-    def __init__(self, connection_url: str):
-        self.connection_url = connection_url
-        # Create engine with connection pool
-        self._engine = create_engine(
-            self.connection_url,
-            pool_size=5,        # Maximum number of persistent connections
-            max_overflow=10,    # Maximum number of additional connections
-            pool_timeout=30,    # Timeout waiting for connection (seconds)
-            pool_recycle=1800,  # Recycle connections after 30 minutes
-        )
+load_dotenv()
 
-        # Create session factory
-        session_factory = sessionmaker(bind=self._engine)
-        
-        # Create thread-safe session factory
-        self._session_factory = scoped_session(session_factory)
+@staticmethod
+def get_connection_url():
+    params = dict(user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        db_name=os.getenv("DB_NAME")
+    )
+    return "postgresql://{user}:{password}@{host}:{port}/{db_name}".format(**params)
 
-    @contextmanager
-    def get_session(self):
-        """Provide a transactional scope around a series of operations."""
-        session = self._session_factory()
-        try:
-            yield session
-            session.commit()
-        except:
-            session.rollback()
-            raise
-        finally:
-            session.close()
-
-    def get_session_factory(self):
-        """Returns the session factory for dependency injection."""
-        return self.get_session
+@staticmethod
+def get_config():
+    return {
+        "user": os.getenv("DB_USER"),
+        "password": os.getenv("DB_PASSWORD"),
+        "host": os.getenv("DB_HOST"),
+        "port": os.getenv("DB_PORT"),
+        "database": os.getenv("DB_NAME")
+    }
