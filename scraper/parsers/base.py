@@ -39,7 +39,7 @@ class BaseParser(ABC):
         elements = soup.find_all(tag, **params)
 
         if len(elements) > 1:
-            logging.warning(f"WARNING: Found more than one matching element: {elements}")
+            raise ValueError(f"ERROR: Found more than one matching element: {elements}")
         elif len(elements) == 0:    
             raise ValueError("ERROR: Target element not found.")
         

@@ -12,7 +12,7 @@ class Item(Base):
     url = Column(String)
     is_active = Column(Boolean, default=True, nullable=False)
 
-    store_id = Column(Integer, ForeignKey('stores.primary_id'), nullable=False)
+    store_id = Column(Integer, ForeignKey('stores.id'), nullable=False)
     store = relationship('Store', back_populates='items')
 
     price_snapshots = relationship('PriceSnapshot', back_populates='item')
@@ -40,11 +40,11 @@ class PriceSnapshot(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     price = Column(Numeric(10, 2, nullable=True))
 
-    item_id = Column(Integer, ForeignKey('items.primary_id'), nullable=False)
+    item_id = Column(Integer, ForeignKey('items.id'), nullable=False)
     item = relationship('Item', back_populates='price_snapshots')
 
     def __str__(self):
-        return (f"PriceSnapshot: {self.item.name} at store {self.store.name} "
+        return (f"PriceSnapshot: {self.item.name} at store {self.item.store.name} "
                 f"on {self.timestamp} for ${self.price}")
     
 

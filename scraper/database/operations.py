@@ -1,4 +1,4 @@
-from price_tracker.database.models import PriceSnapshot, Store, Item
+from .models import PriceSnapshot, Store, Item
 from sqlalchemy.orm.exc import IntegrityError
 import re 
 from datetime import datetime 
@@ -51,7 +51,7 @@ def get_or_create_item(session, item_url, item_name, is_active):
         if not item:
             store = get_or_create_store(session, item_url)
 
-            item = Item(name=item_name, url=item_url, is_active=is_active, store_id=store.primary_id)
+            item = Item(name=item_name, url=item_url, is_active=is_active, store_id=store.id)
             session.add(item)
             session.flush()
             logging.info(f"Created new item: {item}")
@@ -68,7 +68,7 @@ def add_price_snapshot(session, item_url, item_name, price):
     date_time = datetime.now()
 
     try: 
-        snapshot = PriceSnapshot(timestamp=date_time, price=price, item_id=item.primary_id)
+        snapshot = PriceSnapshot(timestamp=date_time, price=price, item_id=item.id)
         session.add(snapshot)
         session.flush()
         logging.debug(f"Created new price snapshot: {snapshot}")
@@ -76,9 +76,8 @@ def add_price_snapshot(session, item_url, item_name, price):
         session.rollback()
         raise ValueError(f"Error creating price snapshot: {str(e)}")
 
-def get_item_history( item_id, limit=20):
-    with self.db_manager.session_scope() as session:
-        return session.query(PriceSnapshot)\
-                        .filter(PriceSnapshot.item_id == item_id)\
-                        .order_by(PriceSnapshot.timestamp.desc())\
-                        .limit(limit).all()
+def get_item_history(session, item_id, limit=20):
+    return session.query(PriceSnapshot)\
+                    .filter(PriceSnapshot.item_id == item_id)\
+                    .order_by(PriceSnapshot.timestamp.desc())\
+                    .limit(limit).all()

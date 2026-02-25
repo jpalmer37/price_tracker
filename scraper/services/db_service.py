@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
-from price_tracker.models.price_snapshot import PriceSnapshot
+from scraper.database.models import PriceSnapshot
 
 
 class DatabaseConnectionService:
@@ -28,4 +28,4 @@ class DatabaseOperationService:
     def add_price_snapshot(self, item_id, price):
         with self.connection.session_scope() as session:
             snapshot = PriceSnapshot(item_id=item_id, price=price)
-        session.add(snapshot)
+            session.add(snapshot)

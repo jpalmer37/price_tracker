@@ -8,7 +8,7 @@ from .costco_parser import CostcoParser
 # Map domain names to parser classes
 PARSER_MAP = {
     'www.canadacomputers.com': CanadaComputersParser,
-    'www.costco.com': CostcoParser,
+    'www.costco.ca': CostcoParser,
     # Add other domains (e.g., 'www.amazon.ca', 'www.bestbuy.com')
 }
 
@@ -20,7 +20,7 @@ def get_parser(url: str) -> BaseParser | None:
         domain = urlparse(url).netloc
         parser_class = PARSER_MAP.get(domain)
         if parser_class:
-            return parser_class(url) # Pass config if needed: parser_class(url, config)
+            return parser_class()
         else:
             print(f"No parser found for domain: {domain}") # Use logging
             return None

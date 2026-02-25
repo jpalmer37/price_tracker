@@ -1,4 +1,4 @@
-from base import BaseParser
+from .base import BaseParser
 import logging 
 class CanadaComputersParser(BaseParser):
 
@@ -6,8 +6,8 @@ class CanadaComputersParser(BaseParser):
     
     def extract_info(self, url):
         soup = self._get_soup(url)
-        price = self._find_unique_element(soup, "h1", {'class_':"f-20 f-xs-13 fm-SegoeUI-Semibold fm-xs-SF-Pro-Display-Medium h4"})
-        name = self._find_unique_element(soup, "span", {'class_':"current-price-value f-32 f-xs-17 fm-SegoeUI-Bold fm-xs-SF-Pro-Display-Bold font-weight-xs-bold"})
+        name = self._find_unique_element(soup, "h1", {'class_':"f-20 f-xs-13 fm-SegoeUI-Semibold fm-xs-SF-Pro-Display-Medium h4"})
+        price = self._find_unique_element(soup, "span", {'class_':"current-price-value f-32 f-xs-17 fm-SegoeUI-Bold fm-xs-SF-Pro-Display-Bold font-weight-xs-bold"})
 
         return {'name': name, 'price': price}    
 

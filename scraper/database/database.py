@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from contextlib import contextmanager
-from config import get_database_url
+from .config import get_database_url
 
 class Database:
     def __init__(self, database_config={}):

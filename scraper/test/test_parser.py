@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import Mock, patch
 from bs4 import BeautifulSoup
 from ..parsers.base import BaseParser
+from ..parsers.costco_parser import CostcoParser
+from ..parsers.cc_parser import CanadaComputersParser
 
 # Fixtures
 @pytest.fixture
@@ -30,7 +32,7 @@ def test_fetch_page_soup(mock_browser_service):
     test_html = "<html><body><h1>Test Page</h1></body></html>"
     parser.driver.page_source = test_html
     
-    soup = parser._fetch_page_soup("http://test.com")
+    soup = parser._get_soup("http://test.com")
     assert isinstance(soup, BeautifulSoup)
     assert str(soup.h1.string) == "Test Page"
 
@@ -56,7 +58,7 @@ def test_find_unique_element_none_raises(costco_parser):
         costco_parser._find_unique_element(soup, "span", {'class_': 'test'})
 
 # Costco Parser Tests
-def test_costco_extract_info(_, costco_parser):
+def test_costco_extract_info(costco_parser):
     test_html = """
     <html>
         <body>
@@ -72,19 +74,20 @@ def test_costco_extract_info(_, costco_parser):
     assert result['name'] == "Test Product"
 
 # Canada Computers Parser Tests
-def test_canada_computers_extract_price(_, canada_computers_parser):
+def test_canada_computers_extract_info(canada_computers_parser):
     test_html = """
     <html>
         <body>
             <h1 class="f-20 f-xs-13 fm-SegoeUI-Semibold fm-xs-SF-Pro-Display-Medium h4">Test Product</h1>
-            <div class="current-price-value f-32 f-xs-17 fm-SegoeUI-Bold fm-xs-SF-Pro-Display-Bold font-weight-xs-bold">$199.99</div>
+            <span class="current-price-value f-32 f-xs-17 fm-SegoeUI-Bold fm-xs-SF-Pro-Display-Bold font-weight-xs-bold">$199.99</span>
         </body>
     </html>
     """
     canada_computers_parser.driver.page_source = test_html
     
-    result = canada_computers_parser.extract_price("http://test.com")
-    assert result == "$199.99"
+    result = canada_computers_parser.extract_info("http://test.com")
+    assert result['price'] == "$199.99"
+    assert result['name'] == "Test Product"
 
 # Parameterized Tests Example
 @pytest.mark.parametrize("url,expected_price,expected_name", [

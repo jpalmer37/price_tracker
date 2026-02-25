@@ -1,22 +1,12 @@
 #%%
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
-import time
 import argparse 
-import os, pandas as pd 
-from collections import defaultdict
-import numpy as np 
-import re 
-import json
-import time 
+import yaml
 import logging 
 
-from scraper_costco.scraper.database.operations import Database
-from parsers.costco_parser import CostcoParser
-from parsers.cc_parser import CanadaComputersParser
+from scraper.database.database import Database
+from scraper.database.operations import add_price_snapshot
+from scraper.parsers.costco_parser import CostcoParser
+from scraper.parsers.cc_parser import CanadaComputersParser
 
 store_class_map = [
     CostcoParser, 
@@ -31,16 +21,16 @@ def init_parser():
 
 def load_config(config_file):
     with open(config_file) as f:
-        return json.load(f)
+        return yaml.safe_load(f)
 
 #%%
 def scrape_sites(config):
-    logging.info(json.dumps({"event_type": "start_scrape"}))
-    item_data = []
+    logging.info("Starting scrape")
+    item_data = {}
 
     for store_name, store_item_list in config['watchlist_by_store'].items():
 
-        logging.info()
+        logging.info(f"Scraping store: {store_name}")
 
         store_parser_class = store_class_map[store_name]
 
@@ -48,22 +38,21 @@ def scrape_sites(config):
 
             for item in store_item_list:
 
-                soup = parser.fetch_page_soup(item['item_url'])
+                info = parser.extract_info(item['url'])
 
-                price = parser.extract_price(soup)
-
-                # item_data[item['url']] = item
-                # item_data[item['url']]['store_name'] = store_name
-                # item_data[item['url']]['price'] = price
+                item_data[item['url']] = item
+                item_data[item['url']]['store_name'] = store_name
+                item_data[item['url']]['price'] = info['price']
+                item_data[item['url']]['name'] = info['name']
 
     return item_data
 
 
-def save_snapshots(item_data, database):
+def save_snapshots(item_data, session):
     for url, item in item_data.items():
-        database.add_price_snapshot(item)
-def main():
+        add_price_snapshot(session, url, item['name'], item['price'])
 
+def main():
     logging.basicConfig(
         filename='scraper.log',
         level=logging.INFO,
@@ -74,13 +63,16 @@ def main():
         ]
     )
 
-    parser = init_parser()
+    arg_parser = init_parser()
 
-    args = parser.parse_args()
+    args = arg_parser.parse_args()
 
     config = load_config(args.config)
 
+    database = Database()
     item_data = scrape_sites(config)
+    with database.get_session() as session:
+        save_snapshots(item_data, session)
 
 #%%
 if __name__ == '__main__':
