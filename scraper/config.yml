@@ -1,0 +1,14 @@
+default_scan_interval: 43200
+number_of_stored_snapshots: 50
+watchlist_by_store:
+  costco:
+    - url: https://www.costco.ca/.product.4000092152.html
+      name: LEANFIT Whey Protein - Vanilla Flavour
+    - url: https://www.costco.ca/.product.100713037.html
+      name: Kirkland Signature Chewy Protein Bars, 42 x 40 g
+    - url: https://www.costco.ca/.product.100946336.html
+      name: Kirkland Signature French Roast Whole Bean Coffee, 1.13 kg
+    - url: https://www.costco.ca/.product.4000151796.html
+      name: brust Protein Coffee Light Roast Cold Brew, 18 x 330 mL
+  canada_computers: 
+    - url: https://www.canadacomputers.com/en/powered-by-amd/267624/gigabyte-radeon-rx-9070-xt-gaming-oc-16g-graphics-card-gv-r9070xtgaming-oc-16gd-gv-r9070xtgaming-oc-16gd.html
