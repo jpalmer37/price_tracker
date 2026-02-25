@@ -1,20 +1,17 @@
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
+from contextlib import contextmanager
 
-class BrowserService:
-    """
-    A service class responsible for everything related to selenium browser sessions.
-    """
+class BrowserManager:
     def __init__(self):
         self.options = Options()
         self.options.add_argument('--headless')
-        self.driver = None
         
-    def __enter__(self):
-        if not self.driver:
-            self.driver = webdriver.Firefox(options=self.options)
-        return self
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.driver:
-            self.driver.quit()
-            self.driver = None
+    @contextmanager
+    def browser_scope(self):
+        """Provide a context for browser operations with automatic cleanup."""
+        browser = webdriver.Firefox(options=self.options)
+        try:
+            yield browser
+        finally:
+            browser.quit()
