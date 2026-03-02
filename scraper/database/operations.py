@@ -1,15 +1,15 @@
 from .models import PriceSnapshot, Store, Item
-from sqlalchemy.orm.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError
 import re 
 from datetime import datetime 
 import logging
 
 def _get_store_name(url):
-    result = re.search('^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\.\/\n]+)', url)
+    result = re.search(r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\.\/\n]+)', url)
     return result.group(1) if result else None
 
 def _get_store_base_url(url):
-    result = re.search('^(?:https?:\/\/)?(?:[^@\/\n]+@)?((?:www\.)?[^:\/\n]+)\/', url)
+    result = re.search(r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?((?:www\.)?[^:\/\n]+)\/', url)
     return result.group(1) if result else None
 
 

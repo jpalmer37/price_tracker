@@ -38,7 +38,7 @@ class PriceSnapshot(Base):
     primary_id = Column(Integer, primary_key=True)
 
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    price = Column(Numeric(10, 2, nullable=True))
+    price = Column(Numeric(10, 2), nullable=True)
 
     item_id = Column(Integer, ForeignKey('items.id'), nullable=False)
     item = relationship('Item', back_populates='price_snapshots')
