@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from bs4 import BeautifulSoup
-from ..parsers.base import BaseParser
-from ..parsers.costco_parser import CostcoParser
-from ..parsers.cc_parser import CanadaComputersParser
+from scraper.parsers.base import BaseParser
+from scraper.parsers.costco_parser import CostcoParser
+from scraper.parsers.cc_parser import CanadaComputersParser
 
 # Fixtures
 @pytest.fixture
@@ -24,6 +24,9 @@ def canada_computers_parser(mock_browser_service):
 def test_get_name():
     class TestParser(BaseParser):
         name = 'test_parser'
+
+        def extract_info(self, url):
+            return {"name": "name", "price": "1.00"}
     
     assert TestParser.get_name() == 'test_parser'
 

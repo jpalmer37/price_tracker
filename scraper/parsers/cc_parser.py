@@ -1,8 +1,8 @@
 from .base import BaseParser
-import logging 
 class CanadaComputersParser(BaseParser):
 
     name = 'canada_computers'
+    supported_domains = ("canadacomputers.com",)
     
     def extract_info(self, url):
         soup = self._get_soup(url)
@@ -10,5 +10,4 @@ class CanadaComputersParser(BaseParser):
         price = self._find_unique_element(soup, "span", {'class_':"current-price-value f-32 f-xs-17 fm-SegoeUI-Bold fm-xs-SF-Pro-Display-Bold font-weight-xs-bold"})
 
         return {'name': name, 'price': price}    
-
 

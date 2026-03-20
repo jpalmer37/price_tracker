@@ -1,16 +1,50 @@
-from .models import PriceSnapshot, Store, Item
-from sqlalchemy.exc import IntegrityError
-import re 
-from datetime import datetime 
 import logging
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
+from urllib.parse import urlparse
+
+from sqlalchemy.exc import IntegrityError
+
+from scraper.logging_utils import log_event
+from scraper.parsers import infer_store_name
+
+from .models import Item, PriceSnapshot, Store
+
 
 def _get_store_name(url):
-    result = re.search(r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\.\/\n]+)', url)
-    return result.group(1) if result else None
+    try:
+        return infer_store_name(url)
+    except ValueError:
+        hostname = (urlparse(url).hostname or "").lower().removeprefix("www.")
+        return hostname.split(".")[0] if hostname else None
+
 
 def _get_store_base_url(url):
-    result = re.search(r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?((?:www\.)?[^:\/\n]+)\/', url)
-    return result.group(1) if result else None
+    parsed_url = urlparse(url)
+    if not parsed_url.scheme or not parsed_url.netloc:
+        return None
+
+    return f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+
+def _normalize_price(price) -> Decimal | None:
+    if price is None:
+        return None
+
+    if isinstance(price, Decimal):
+        return price
+
+    if isinstance(price, (int, float)):
+        return Decimal(str(price))
+
+    cleaned_price = "".join(character for character in str(price) if character.isdigit() or character == ".")
+    if not cleaned_price:
+        return None
+
+    try:
+        return Decimal(cleaned_price)
+    except InvalidOperation as exc:
+        raise ValueError(f"Error parsing price: {price}") from exc
 
 
 def get_or_create_store(session, store_url):
@@ -26,7 +60,7 @@ def get_or_create_store(session, store_url):
         raise ValueError("Store name could not be extracted from URL")
      
     try:
-        store = session.query(Store).filter(Store.name == store_name).first()
+        store = session.query(Store).filter(Store.base_url == store_base_url).first()
 
         if store is None:
             store = Store(
@@ -35,6 +69,7 @@ def get_or_create_store(session, store_url):
             )
             session.add(store)
             session.flush()
+            log_event(logging.INFO, "store_created", store_name=store.name, base_url=store.base_url)
             
         return store
         
@@ -42,7 +77,7 @@ def get_or_create_store(session, store_url):
         session.rollback()
         raise ValueError(f"Error creating store: {str(e)}")
 
-def get_or_create_item(session, item_url, item_name, is_active):
+def get_or_create_item(session, item_url, item_name, is_active=True):
     """Get existing store or create new one if it doesn't exist"""
 
     try:
@@ -54,7 +89,10 @@ def get_or_create_item(session, item_url, item_name, is_active):
             item = Item(name=item_name, url=item_url, is_active=is_active, store_id=store.id)
             session.add(item)
             session.flush()
-            logging.info(f"Created new item: {item}")
+            log_event(logging.INFO, "item_created", item_url=item.url, item_name=item.name, store_name=store.name)
+        else:
+            item.name = item_name or item.name
+            item.is_active = is_active
 
     except IntegrityError as e:
         session.rollback()
@@ -64,17 +102,26 @@ def get_or_create_item(session, item_url, item_name, is_active):
 def add_price_snapshot(session, item_url, item_name, price):
         
     item = get_or_create_item(session, item_url, item_name=item_name, is_active=True)
-
+    normalized_price = _normalize_price(price)
     date_time = datetime.now()
 
     try: 
-        snapshot = PriceSnapshot(timestamp=date_time, price=price, item_id=item.id)
+        snapshot = PriceSnapshot(timestamp=date_time, price=normalized_price, item_id=item.id)
         session.add(snapshot)
         session.flush()
-        logging.debug(f"Created new price snapshot: {snapshot}")
+        log_event(
+            logging.INFO,
+            "price_snapshot_created",
+            item_url=item.url,
+            item_name=item.name,
+            price=str(normalized_price) if normalized_price is not None else None,
+            timestamp=date_time.isoformat(),
+        )
     except IntegrityError as e:
         session.rollback()
         raise ValueError(f"Error creating price snapshot: {str(e)}")
+
+    return snapshot
 
 def get_item_history(session, item_id, limit=20):
     return session.query(PriceSnapshot)\

@@ -1,13 +1,39 @@
-version: '3.9'
+version: "3.9"
 
 services:
   postgres:
-    image: postgres:14-alpine
+    image: postgres:16-alpine
     ports:
-      - 5432:5432
-    volumes:
-      - /Users/jpalmer/data/postgres:/var/lib/postgresql/data
+      - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=S3cret
-      - POSTGRES_USER=dbuser
-      - POSTGRES_DB=price_tracker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-S3cret}
+      POSTGRES_USER: ${POSTGRES_USER:-dbuser}
+      POSTGRES_DB: ${POSTGRES_DB:-price_tracker}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dbuser} -d ${POSTGRES_DB:-price_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  price-tracker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_USERNAME: ${POSTGRES_USER:-dbuser}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-S3cret}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${POSTGRES_DB:-price_tracker}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ../scraper/config.yml:/app/scraper/config.yml:ro
+    command: ["python", "-m", "scraper.main", "-c", "/app/scraper/config.yml"]
+
+volumes:
+  postgres_data:
