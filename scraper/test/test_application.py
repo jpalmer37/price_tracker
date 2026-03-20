@@ -46,7 +46,7 @@ def test_add_price_snapshot_creates_store_item_and_history():
         history = get_item_history(session, item.id, limit=5)
 
     assert store.name == "costco"
-    assert store.base_url == "https://www.costco.ca"
+    assert store.base_url == "costco.ca"
     assert item.name == "Protein"
     assert len(history) == 1
     assert float(history[0].price) == 99.99

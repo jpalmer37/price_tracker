@@ -21,10 +21,10 @@ def _get_store_name(url):
 
 def _get_store_base_url(url):
     parsed_url = urlparse(url)
-    if not parsed_url.scheme or not parsed_url.netloc:
+    if not parsed_url.netloc:
         return None
 
-    return f"{parsed_url.scheme}://{parsed_url.netloc}"
+    return parsed_url.netloc.lower().removeprefix("www.")
 
 
 def _normalize_price(price) -> Decimal | None:
@@ -60,7 +60,7 @@ def get_or_create_store(session, store_url):
         raise ValueError("Store name could not be extracted from URL")
      
     try:
-        store = session.query(Store).filter(Store.base_url == store_base_url).first()
+        store = session.query(Store).filter(Store.name == store_name).first()
 
         if store is None:
             store = Store(
@@ -91,6 +91,16 @@ def get_or_create_item(session, item_url, item_name, is_active=True):
             session.flush()
             log_event(logging.INFO, "item_created", item_url=item.url, item_name=item.name, store_name=store.name)
         else:
+            if item.name != (item_name or item.name) or item.is_active != is_active:
+                log_event(
+                    logging.INFO,
+                    "item_updated",
+                    item_url=item.url,
+                    previous_name=item.name,
+                    new_name=item_name or item.name,
+                    previous_is_active=item.is_active,
+                    new_is_active=is_active,
+                )
             item.name = item_name or item.name
             item.is_active = is_active
 
