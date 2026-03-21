@@ -1,22 +1,12 @@
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
 
-def get_database_url():
-    params = dict(user=os.getenv("DATABASE_USERNAME"),
-				password=os.getenv("DATABASE_PASSWORD"),
-				host=os.getenv("DATABASE_HOST"),
-				port=os.getenv("DATABASE_PORT"),
-				db_name=os.getenv("DATABASE_NAME")
-    )
-    return "postgresql://{user}:{password}@{host}:{port}/{db_name}".format(**params)
+def get_database_url() -> str:
+    """Build a PostgreSQL connection URL from environment variables."""
+    user = os.environ["DATABASE_USERNAME"]
+    password = os.environ["DATABASE_PASSWORD"]
+    host = os.environ.get("DATABASE_HOST", "localhost")
+    port = os.environ.get("DATABASE_PORT", "5432")
+    db_name = os.environ.get("DATABASE_NAME", "price_tracker")
+    return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
-def get_config():
-    return {
-        "user": os.getenv("DATABASE_USERNAME"),
-        "password": os.getenv("DATABASE_PASSWORD"),
-        "host": os.getenv("DATABASE_HOST"),
-        "port": os.getenv("DATABASE_PORT"),
-        "database": os.getenv("DATABASE_NAME")
-    }
