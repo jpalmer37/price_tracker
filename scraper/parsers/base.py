@@ -34,7 +34,7 @@ class BaseParser(ABC):
     # ------------------------------------------------------------------
     # Context-manager support
     # ------------------------------------------------------------------
-    def __enter__(self):
+    def __enter__(self) -> "BaseParser":
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

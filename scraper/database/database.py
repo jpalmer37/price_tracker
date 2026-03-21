@@ -1,5 +1,6 @@
 import json
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
@@ -31,7 +32,7 @@ class Database:
         logging.info(json.dumps({"event_type": "database_tables_created"}))
 
     @contextmanager
-    def get_session(self) -> Session:
+    def get_session(self) -> Iterator[Session]:
         """Provide a transactional scope around a series of operations."""
         session = self._session_factory()
         try:
