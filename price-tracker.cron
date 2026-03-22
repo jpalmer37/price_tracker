@@ -1,4 +1,4 @@
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-# Redirect job output to PID 1 so logs are visible through standard Docker logging.
+# Redirect output to PID 1 stdout/stderr so cron job logs appear in `docker logs`.
 0 */12 * * * root cd /app && /usr/local/bin/python -m scraper.main -c scraper/config.yml >> /proc/1/fd/1 2>> /proc/1/fd/2

@@ -24,3 +24,4 @@ def test_database_url_resolves_relative_paths_from_cwd(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", "data/relative.db")
 
     assert get_database_url() == f"sqlite:///{tmp_path / 'data' / 'relative.db'}"
+    assert (tmp_path / "data").is_dir()
