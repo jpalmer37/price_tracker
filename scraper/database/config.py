@@ -1,12 +1,11 @@
 import os
+from pathlib import Path
 
 
 def get_database_url() -> str:
-    """Build a PostgreSQL connection URL from environment variables."""
-    user = os.environ["DATABASE_USERNAME"]
-    password = os.environ["DATABASE_PASSWORD"]
-    host = os.environ.get("DATABASE_HOST", "localhost")
-    port = os.environ.get("DATABASE_PORT", "5432")
-    db_name = os.environ.get("DATABASE_NAME", "price_tracker")
-    return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
-
+    """Build a SQLite connection URL from environment variables."""
+    db_path = Path(os.environ.get("DATABASE_PATH", "price_tracker.db")).expanduser()
+    if not db_path.is_absolute():
+        db_path = Path.cwd() / db_path
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{db_path}"
