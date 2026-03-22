@@ -78,6 +78,7 @@ python -m pytest scraper/test/ -v
 ```
 ├── Dockerfile                  # App container image
 ├── environment.yml             # Conda environment definition
+├── price-tracker.cron          # Cron schedule used by the container
 ├── requirements.txt            # Python dependencies
 ├── env/
 │   └── docker-compose.yml      # Orchestrates the cron-driven tracker container

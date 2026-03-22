@@ -20,8 +20,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY scraper/ scraper/
+COPY price-tracker.cron /etc/cron.d/price-tracker
 RUN mkdir -p /data
-RUN printf 'SHELL=/bin/sh\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n0 */12 * * * root cd /app && /usr/local/bin/python -m scraper.main -c scraper/config.yml >> /proc/1/fd/1 2>> /proc/1/fd/2\n' > /etc/cron.d/price-tracker \
-    && chmod 0644 /etc/cron.d/price-tracker
+RUN chmod 0644 /etc/cron.d/price-tracker \
+    && chown root:root /etc/cron.d/price-tracker
 
 CMD ["cron", "-f"]
