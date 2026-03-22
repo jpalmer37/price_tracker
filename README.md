@@ -1,13 +1,12 @@
 # Price Tracker
 
-A Dockerized price-tracking application that scrapes product pages using a headless Firefox browser (Selenium), stores historical price snapshots in PostgreSQL (via SQLAlchemy), and sends email alerts when notable price drops are detected.
+A Dockerized price-tracking application that scrapes product pages using a headless Firefox browser (Selenium), stores historical price snapshots in a single SQLite database file (via SQLAlchemy), and sends email alerts when notable price drops are detected.
 
 ## Architecture
 
 | Container | Purpose |
 |-----------|---------|
-| **postgres** | PostgreSQL 14 database holding `stores`, `items`, and `price_snapshots` tables |
-| **tracker** | Python application that scrapes prices, records snapshots, analyses trends, and sends email notifications |
+| **tracker** | Python application that scrapes prices on a cron schedule, records snapshots in SQLite, analyses trends, and sends email notifications |
 
 ## Quick Start
 
@@ -16,20 +15,34 @@ A Dockerized price-tracking application that scrapes product pages using a headl
 git clone https://github.com/jpalmer37/price_tracker.git
 cd price_tracker
 
-# 2. (Optional) Create a .env file with your database credentials
-#    Defaults are provided in docker-compose.yml
+# 2. (Optional) Create a .env file with a custom SQLite database path
 cat > .env <<'EOF'
-DATABASE_USERNAME=dbuser
-DATABASE_PASSWORD=S3cret
-DATABASE_NAME=price_tracker
+DATABASE_PATH=/data/price_tracker.db
 EOF
 
 # 3. Edit the watchlist
 #    Add the product URLs you want to track in scraper/config.yml
 
-# 4. Build and run
+# 4. Build and run the cron-driven container
 cd env
 docker compose up --build
+```
+
+The container keeps running in the foreground and executes the scraper every 12 hours via cron. The SQLite database file is persisted in a Docker volume mounted at `/data`.
+
+## Python Environment Options
+
+Use either pip or conda:
+
+```bash
+# pip
+pip install -r requirements.txt
+```
+
+```bash
+# conda
+conda env create -f environment.yml
+conda activate price-tracker
 ```
 
 ## Configuration
@@ -56,6 +69,7 @@ The application automatically determines which store a URL belongs to from the d
 
 ```bash
 pip install -r requirements.txt
+pip install pytest
 python -m pytest scraper/test/ -v
 ```
 
@@ -63,9 +77,11 @@ python -m pytest scraper/test/ -v
 
 ```
 ├── Dockerfile                  # App container image
+├── environment.yml             # Conda environment definition
+├── price-tracker.cron          # Cron schedule used by the container
 ├── requirements.txt            # Python dependencies
 ├── env/
-│   └── docker-compose.yml      # Orchestrates postgres + tracker
+│   └── docker-compose.yml      # Orchestrates the cron-driven tracker container
 └── scraper/
     ├── main.py                 # Entry point
     ├── config.yml              # Watchlist & notification config
@@ -74,7 +90,7 @@ python -m pytest scraper/test/ -v
     ├── notifications.py        # EmailSender class (sendmail)
     ├── price_analysis.py       # Pandas-based drop detection & alerts
     ├── database/
-    │   ├── config.py           # DB connection URL from env vars
+    │   ├── config.py           # SQLite DB connection URL from env vars
     │   ├── database.py         # Engine & session management
     │   ├── models.py           # SQLAlchemy models (Store, Item, PriceSnapshot)
     │   └── operations.py       # CRUD helpers
@@ -85,4 +101,3 @@ python -m pytest scraper/test/ -v
     └── test/
         └── test_parser.py      # Unit tests
 ```
-

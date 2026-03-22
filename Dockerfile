@@ -2,6 +2,7 @@ FROM python:3.12-slim
 
 # Install Firefox and dependencies for headless browsing
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
     firefox-esr \
     wget \
     && rm -rf /var/lib/apt/lists/*
@@ -19,5 +20,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY scraper/ scraper/
+COPY price-tracker.cron /etc/cron.d/price-tracker
+RUN mkdir -p /data
+RUN chmod 0644 /etc/cron.d/price-tracker \
+    && chown root:root /etc/cron.d/price-tracker
 
-CMD ["python", "-m", "scraper.main", "-c", "scraper/config.yml"]
+CMD ["cron", "-f"]

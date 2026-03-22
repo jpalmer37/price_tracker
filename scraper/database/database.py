@@ -16,13 +16,17 @@ class Database:
 
     def __init__(self, url: str | None = None):
         self.url = url or get_database_url()
-        self.engine = create_engine(
-            self.url,
-            pool_size=5,
-            max_overflow=10,
-            pool_timeout=30,
-            pool_pre_ping=True,
-        )
+        engine_kwargs = {}
+        if self.url.startswith("sqlite"):
+            engine_kwargs["connect_args"] = {"check_same_thread": False}
+        else:
+            engine_kwargs.update({
+                "pool_size": 5,
+                "max_overflow": 10,
+                "pool_timeout": 30,
+                "pool_pre_ping": True,
+            })
+        self.engine = create_engine(self.url, **engine_kwargs)
         self._session_factory = sessionmaker(bind=self.engine)
         logging.info(json.dumps({"event_type": "database_engine_created"}))
 
@@ -47,4 +51,3 @@ class Database:
             raise
         finally:
             session.close()
-
